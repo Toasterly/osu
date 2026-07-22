@@ -177,7 +177,10 @@ namespace osu.Game.Rulesets.Osu.Skinning.Legacy
                     case ArmedState.Hit:
                         if (!hitAnimations.Value)
                         {
-                            this.FadeOut(fade_out_no_anim);
+                            CircleSprite.FadeOut(fade_out_no_anim);
+                            OverlaySprite.FadeOut(fade_out_no_anim);
+                            if (hasNumber)
+                                hitCircleText.FadeOut(fade_out_no_anim);
                             break;
                         }
 

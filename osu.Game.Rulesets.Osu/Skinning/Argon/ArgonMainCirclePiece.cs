@@ -178,22 +178,23 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
 
                         const float shrink_size = 0.8f;
 
+                        // Check hit lighting early in-case hit animations are off.
+                        if (configHitLighting.Value)
+                        {
+                            flash.HitLighting = true;
+                            flash.FadeTo(1, flash_in_duration, Easing.OutQuint);
+                        }
+                        else
+                        {
+                            flash.HitLighting = false;
+                            flash.FadeTo(1, flash_in_duration, Easing.OutQuint)
+                                 .Then()
+                                 .FadeOut(flash_in_duration, Easing.OutQuint);
+                        }
+
                         if (!hitAnimations.Value)
                         {
                             const double fade_out_no_anim = 50;
-
-                            flash.HitLighting = configHitLighting.Value;
-
-                            if (configHitLighting.Value)
-                            {
-                                flash.FadeTo(1, fade_out_no_anim, Easing.OutQuint);
-                            }
-                            else
-                            {
-                                flash.FadeTo(1, fade_out_no_anim, Easing.OutQuint)
-                                     .Then()
-                                     .FadeOut(fade_out_no_anim, Easing.OutQuint);
-                            }
 
                             // To keep hit lighting on Argon we must fade the components before the main object.
                             number.FadeOut(fade_out_no_anim);
@@ -249,22 +250,7 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
                                 .FadeOut(flash_in_duration);
                         }
 
-                        if (configHitLighting.Value)
-                        {
-                            flash.HitLighting = true;
-                            flash.FadeTo(1, flash_in_duration, Easing.OutQuint);
-
-                            this.FadeOut(fade_out_time, Easing.OutQuad);
-                        }
-                        else
-                        {
-                            flash.HitLighting = false;
-                            flash.FadeTo(1, flash_in_duration, Easing.OutQuint)
-                                 .Then()
-                                 .FadeOut(flash_in_duration, Easing.OutQuint);
-
-                            this.FadeOut(fade_out_time * 0.8f, Easing.OutQuad);
-                        }
+                        this.FadeOut(configHitLighting.Value ? fade_out_time : fade_out_time * 0.8f, Easing.OutQuad);
 
                         break;
                 }
