@@ -175,14 +175,72 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
                         const double fade_out_time = 800;
                         const double flash_in_duration = 150;
                         const double resize_duration = 400;
+                        const double fade_out_no_anim = 50;
 
                         const float shrink_size = 0.8f;
 
-                        // Check hit lighting early in-case hit animations are off.
+                        if (!hitAnimations.Value)
+                        {
+                            number.FadeOut(fade_out_no_anim);
+                            border.FadeOut(fade_out_no_anim);
+
+                            innerFill.FadeOut(fade_out_no_anim);
+                            outerFill.FadeOut(fade_out_no_anim);
+
+                            innerGradient.FadeOut(fade_out_no_anim);
+                            outerGradient.FadeOut(fade_out_no_anim);
+                        }
+                        else
+                        {
+                            // Animating with the number present is distracting.
+                            // The number disappearing is hidden by the bright flash.
+                            number.FadeOut(flash_in_duration / 2);
+
+                            // The fill layers add too much noise during the explosion animation.
+                            // They will be hidden by the additive effects anyway.
+                            outerFill.FadeOut(flash_in_duration, Easing.OutQuint);
+                            innerFill.FadeOut(flash_in_duration, Easing.OutQuint);
+
+                            // The inner-most gradient should actually be resizing, but is only visible for
+                            // a few milliseconds before it's hidden by the flash, so it's pointless overhead to bother with it.
+                            innerGradient.FadeOut(flash_in_duration, Easing.OutQuint);
+
+                            // The border is always white, but after hit it gets coloured by the skin/beatmap's colouring.
+                            // A gradient is applied to make the border less prominent over the course of the animation.
+                            // Without this, the border dominates the visual presence of the explosion animation in a bad way.
+                            border.TransformTo(nameof
+                                (BorderColour), ColourInfo.GradientVertical(
+                                accentColour.Value.Opacity(0.5f),
+                                accentColour.Value.Opacity(0)), fade_out_time);
+
+                            // The outer ring shrinks immediately, but accounts for its thickness so it doesn't overlap the inner
+                            // gradient layers.
+                            border.ResizeTo(Size * shrink_size + new Vector2(border.BorderThickness), resize_duration, Easing.OutElasticHalf);
+
+                            // Kiai flash should track the overall size but also be cleaned up quite fast, so we don't get additional
+                            // flashes after the hit animation is already in a mostly-completed state.
+                            kiaiContainer.ResizeTo(Size * shrink_size, resize_duration, Easing.OutElasticHalf);
+                            kiaiContainer.FadeOut(flash_in_duration, Easing.OutQuint);
+
+                            // The outer gradient is resize with a slight delay from the border.
+                            // This is to give it a bomb-like effect, with the border "triggering" its animation when getting close.
+                            using (BeginDelayedSequence(flash_in_duration / 12))
+                            {
+                                outerGradient.ResizeTo(OUTER_GRADIENT_SIZE * shrink_size, resize_duration, Easing.OutElasticHalf);
+
+                                outerGradient
+                                    .FadeColour(Color4.White, 80)
+                                    .Then()
+                                    .FadeOut(flash_in_duration);
+                            }
+                        }
+
                         if (configHitLighting.Value)
                         {
                             flash.HitLighting = true;
                             flash.FadeTo(1, flash_in_duration, Easing.OutQuint);
+
+                            this.FadeOut(fade_out_time, Easing.OutQuad);
                         }
                         else
                         {
@@ -190,67 +248,9 @@ namespace osu.Game.Rulesets.Osu.Skinning.Argon
                             flash.FadeTo(1, flash_in_duration, Easing.OutQuint)
                                  .Then()
                                  .FadeOut(flash_in_duration, Easing.OutQuint);
+
+                            this.FadeOut(fade_out_time * 0.8f, Easing.OutQuad);
                         }
-
-                        if (!hitAnimations.Value)
-                        {
-                            const double fade_out_no_anim = 50;
-
-                            // To keep hit lighting on Argon we must fade the components before the main object.
-                            number.FadeOut(fade_out_no_anim);
-                            border.FadeOut(fade_out_no_anim);
-                            innerFill.FadeOut(fade_out_no_anim);
-                            outerFill.FadeOut(fade_out_no_anim);
-                            innerGradient.FadeOut(fade_out_no_anim);
-                            outerGradient.FadeOut(fade_out_no_anim);
-
-                            this.FadeOut(fade_out_time);
-                            break;
-                        }
-
-                        // Animating with the number present is distracting.
-                        // The number disappearing is hidden by the bright flash.
-                        number.FadeOut(flash_in_duration / 2);
-
-                        // The fill layers add too much noise during the explosion animation.
-                        // They will be hidden by the additive effects anyway.
-                        outerFill.FadeOut(flash_in_duration, Easing.OutQuint);
-                        innerFill.FadeOut(flash_in_duration, Easing.OutQuint);
-
-                        // The inner-most gradient should actually be resizing, but is only visible for
-                        // a few milliseconds before it's hidden by the flash, so it's pointless overhead to bother with it.
-                        innerGradient.FadeOut(flash_in_duration, Easing.OutQuint);
-
-                        // The border is always white, but after hit it gets coloured by the skin/beatmap's colouring.
-                        // A gradient is applied to make the border less prominent over the course of the animation.
-                        // Without this, the border dominates the visual presence of the explosion animation in a bad way.
-                        border.TransformTo(nameof
-                            (BorderColour), ColourInfo.GradientVertical(
-                            accentColour.Value.Opacity(0.5f),
-                            accentColour.Value.Opacity(0)), fade_out_time);
-
-                        // The outer ring shrinks immediately, but accounts for its thickness so it doesn't overlap the inner
-                        // gradient layers.
-                        border.ResizeTo(Size * shrink_size + new Vector2(border.BorderThickness), resize_duration, Easing.OutElasticHalf);
-
-                        // Kiai flash should track the overall size but also be cleaned up quite fast, so we don't get additional
-                        // flashes after the hit animation is already in a mostly-completed state.
-                        kiaiContainer.ResizeTo(Size * shrink_size, resize_duration, Easing.OutElasticHalf);
-                        kiaiContainer.FadeOut(flash_in_duration, Easing.OutQuint);
-
-                        // The outer gradient is resize with a slight delay from the border.
-                        // This is to give it a bomb-like effect, with the border "triggering" its animation when getting close.
-                        using (BeginDelayedSequence(flash_in_duration / 12))
-                        {
-                            outerGradient.ResizeTo(OUTER_GRADIENT_SIZE * shrink_size, resize_duration, Easing.OutElasticHalf);
-
-                            outerGradient
-                                .FadeColour(Color4.White, 80)
-                                .Then()
-                                .FadeOut(flash_in_duration);
-                        }
-
-                        this.FadeOut(configHitLighting.Value ? fade_out_time : fade_out_time * 0.8f, Easing.OutQuad);
 
                         break;
                 }

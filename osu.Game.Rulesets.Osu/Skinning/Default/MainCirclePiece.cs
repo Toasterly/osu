@@ -93,6 +93,7 @@ namespace osu.Game.Rulesets.Osu.Skinning.Default
                         const double fade_out_time = 800;
                         const double flash_in = 40;
                         const double flash_out = 100;
+                        const double fade_out_no_anim = 50;
 
                         flash.FadeTo(0.8f, flash_in)
                              .Then()
@@ -102,8 +103,6 @@ namespace osu.Game.Rulesets.Osu.Skinning.Default
 
                         if (!hitAnimations.Value)
                         {
-                            const double fade_out_no_anim = 50;
-
                             // To keep hit lighting we must fade the components before the main object.
                             ring.FadeOut(fade_out_no_anim);
                             circle.FadeOut(fade_out_no_anim);
